@@ -1,0 +1,50 @@
+<simple-notifications></simple-notifications>
+
+<form class="example-form">
+    <mat-form-field class="example-full-width">
+        <input matInput placeholder="Username" #user>
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+    <mat-label>Select room</mat-label>
+    <mat-select>
+        <mat-option *ngFor="let room of rooms" [value]="room" (click)="join(user.value, room)">
+            {{room}}
+        </mat-option>
+    </mat-select>
+    </mat-form-field>
+
+    <mat-list class="chat-list" *ngFor="let item of messageArray">
+        <p mat-line class="chat-list-item" [ngStyle]="{'background':item.userTo ? '#a7889f' : '' }">
+            <span><strong>{{item.user}} : </strong> {{item.message}}</span>
+        </p>
+    </mat-list>
+
+    <div class="chat-footer-container">
+        <mat-form-field class="chat-input">
+            <input matInput 
+                    #inputMessage
+                    maxlength="140" 
+                    placeholder="Type your message" 
+                    (keyup.enter)="sendMessage(inputMessage.value); inputMessage.value=''"
+                    aria-label="Number" 
+                    matInput [formControl]="myControl" 
+                    [matAutocomplete]="auto">
+            <mat-hint align="end">{{inputMessage.value.length}}/140</mat-hint>
+            <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+                <mat-option *ngFor="let user of filteredOptions  | async" [value]="user">
+                    {{user}}
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+        <!-- <label class="image-upload-container btn btn-bwm">
+                <span>Select Image</span>
+                <input #imageInput
+                       type="file"
+                       accept="image/*"
+                       (change)="processFile(imageInput)">
+        </label>
+        <button (click)='uploadImage()' type='button'>Upload Image</button> -->
+    </div>
+
+</form> 
