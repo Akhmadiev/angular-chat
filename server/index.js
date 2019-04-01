@@ -20,7 +20,8 @@ io.on('connection', (socket) => {
       users.push("@" + data.user + " ");
       users = users.filter( onlyUnique );
 
-      io.in(data.room).emit('new user joined', { user: data.user, users: users, message:'has joined this room.' });
+      io.in(data.room).emit('new user joined', { user: data.user, sockedId: socket.id, users: users, message:'has joined this room.' });
+
       // socket.broadcast.to(data.room).emit('new user joined', { user: data.user, users: users, message:'has joined this room.' });
     });
 
@@ -35,6 +36,10 @@ io.on('connection', (socket) => {
 
     socket.on('message',function(data){
       io.in(data.room).emit('new message', {user:data.user, userTo:data.userTo, message:data.message});
+    });
+
+    socket.on('private_message',function(data){
+      socket.to(data.socketId).emit('new_private_message', {user:data.user, userTo:data.userTo, message:data.message});
     });
 });
 
