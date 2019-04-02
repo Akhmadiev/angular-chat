@@ -11,16 +11,12 @@ let users = [];
 const port = process.env.PORT || 3000;
 
 io.on('connection', (socket) => {
-    console.log('user connected');
-
     socket.on('join', function(data){
       socket.join(data.room);      
-      console.log(data.user + ' joined the room : ' + data.room);
+      console.log(`user: ${data.user}; socket: ${socket.id}; room: ${data.room}`);
 
-      users.push("@" + data.user + " ");
-      users = users.filter( onlyUnique );
-
-      io.in(data.room).emit('new user joined', { user: data.user, sockedId: socket.id, users: users, message:'has joined this room.' });
+      users.push({ user: data.user, socketId: socket.id });
+      io.in(data.room).emit('new user joined', { user: data.user, users: users, message:'has joined this room.' });
 
       // socket.broadcast.to(data.room).emit('new user joined', { user: data.user, users: users, message:'has joined this room.' });
     });
@@ -35,11 +31,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('message',function(data){
-      io.in(data.room).emit('new message', {user:data.user, userTo:data.userTo, message:data.message});
+      console.log(`${data.user} sent a message in the room: ${data.room}: ${data.message}`);
+      io.in(data.room).emit('new message', {user: data.user, message: data.message});
     });
 
     socket.on('private_message',function(data){
-      socket.to(data.socketId).emit('new_private_message', {user:data.user, userTo:data.userTo, message:data.message});
+      console.log(`${data.user} sent a private message to ${data.userTo}: ${data.message}`);
+      socket.to(data.socketId).emit('new message', {user: data.user, private: true, message: data.message});
     });
 });
 

@@ -17,7 +17,7 @@ export class ChatService {
         const observable = new Observable<{user: string,
             socketId: string,
             users: Array<string>,
-            userTo: string,
+            private: false,
             message: string}>
             (observer => {
             this.socket.on('new user joined', (data) => {
@@ -48,8 +48,12 @@ export class ChatService {
         this.socket.emit('message', data);
     }
 
+    sendPrivateMessage(data) {
+        this.socket.emit('private_message', data);
+    }
+
     newMessageReceived() {
-        const observable = new Observable<{user: string, userTo: string, message: string}>(observer => {
+        const observable = new Observable<{user: string, private: boolean, message: string}>(observer => {
             this.socket.on('new message', (data) => {
                 observer.next(data);
             });

@@ -5,6 +5,8 @@ import { NotificationsService } from 'angular2-notifications';
 import { FormGroup, FormControl } from '@angular/forms';
 import {Observable} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
+import { SwPush } from '@angular/service-worker';
+//import { NewsletterService } from '@angular/language-service';
 
 @Component({
   selector: 'app-root',
@@ -16,9 +18,9 @@ export class AppComponent {
 
     room: string;
 
-    messageArray: Array<{ user: string, userTo: string, message: string }> = [];
+    messageArray: Array<{ user: string, private: boolean, message: string }> = [];
 
-    users: Array<string> = [];
+    users: Array<any> = [];
 
     myControl = new FormControl();
 
@@ -32,7 +34,7 @@ export class AppComponent {
         'Room3'
     ];
 
-    constructor(private chatService: ChatService, private imageService: ImageUploadService, notifier: NotificationsService) {
+    constructor(private chatService: ChatService, private imageService: ImageUploadService, notifier: NotificationsService, private swPush: SwPush) {
         this.notifier = notifier;
 
         this.chatService.newUserJoined()
@@ -43,12 +45,10 @@ export class AppComponent {
 
         this.chatService.newMessageReceived()
             .subscribe(x => {
-                if (x.userTo == null || x.userTo === this.user || x.user === this.user) {
-                    if (x.user !== this.user) {
-                        this.notifier.info(x.user + '<br>sent a message');
-                    }
-                    this.messageArray.push(x);
+                if (this.user != x.user) {
+                    this.notifier.info(x.user + '<br>sent a message');
                 }
+                this.messageArray.push(x);
             });
     }
 
@@ -62,13 +62,28 @@ export class AppComponent {
         this.chatService.leaveRoom({user: this.user, room: this.room});
     }
 
+    // subscribeToNotifications() {
+
+    //     this.swPush.requestSubscription({
+    //         serverPublicKey: this.VAPID_PUBLIC_KEY
+    //     })
+    //     .then(sub => this.newsletterService.addPushSubscriber(sub).subscribe())
+    //     .catch(err => console.error("Could not subscribe to notifications", err));
+    // }
+
     sendMessage(message) {
-        let userTo = null;
         if (message.startsWith('@')) {
             const messageSplit = message.split(' ');
-            userTo = messageSplit[0].substring(1, messageSplit[0].length);
+            var userTo = messageSplit[0].substring(1, messageSplit[0].length);
+            var socketId = this.users.filter(x => x.user == userTo)[0].socketId;
+            console.log(`user: ${this.user}; userTo: ${userTo}; userToSocket: ${socketId}; message: ${message}`);
+
+            var newMessage = { user: this.user, message: message, private: true };
+            this.messageArray.push(newMessage);
+            this.chatService.sendPrivateMessage({user: this.user, socketId: socketId, userTo: userTo, message});
+        } else {
+            this.chatService.sendMessage({user: this.user, room: this.room, message});
         }
-        this.chatService.sendMessage({user: this.user, userTo, room: this.room, message});
     }
 
     NgOnInit() {

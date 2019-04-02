@@ -15,7 +15,7 @@
     </mat-form-field>
 
     <mat-list class="chat-list" *ngFor="let item of messageArray">
-        <p mat-line class="chat-list-item" [ngStyle]="{'background':item.userTo ? '#a7889f' : '' }">
+        <p mat-line class="chat-list-item" [ngStyle]="{'background':item.private ? '#a7889f' : '' }">
             <span><strong>{{item.user}} : </strong> {{item.message}}</span>
         </p>
     </mat-list>
