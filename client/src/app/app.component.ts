@@ -5,8 +5,8 @@ import { NotificationsService } from 'angular2-notifications';
 import { FormGroup, FormControl } from '@angular/forms';
 import {Observable} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
-import { SwPush } from '@angular/service-worker';
-//import { NewsletterService } from '@angular/language-service';
+// import { SwPush } from '@angular/service-worker';
+// import { NewsletterService } from './newsletter.service';
 
 @Component({
   selector: 'app-root',
@@ -26,15 +26,21 @@ export class AppComponent {
 
     filteredOptions: Observable<string[]>;
 
-    private notifier: NotificationsService;
-
     rooms: string[] = [
         'Room1',
         'Room2',
         'Room3'
     ];
 
-    constructor(private chatService: ChatService, private imageService: ImageUploadService, notifier: NotificationsService, private swPush: SwPush) {
+    publicKey: 'BOha2zpOQfGcxihY6zK51U0KrIf6akrXBndn-NHodHHnjwoAh0cNuJzx_dS11RPhdUGm238D8VGB1103U-_0mlU';
+
+    privateKey: 'l4rK1VJXiZCE_Tzo1qCPr8nXiG_7MxteIzJJSFj4jhg';
+
+    constructor(
+        private chatService: ChatService,
+        private imageService: ImageUploadService,
+        private notifier: NotificationsService,
+        ) {
         this.notifier = notifier;
 
         this.chatService.newUserJoined()
@@ -45,12 +51,21 @@ export class AppComponent {
 
         this.chatService.newMessageReceived()
             .subscribe(x => {
-                if (this.user != x.user) {
+                if (this.user !== x.user) {
                     this.notifier.info(x.user + '<br>sent a message');
                 }
                 this.messageArray.push(x);
             });
     }
+
+    // subscribeToNotifications() {
+
+    //     this.swPush.requestSubscription({
+    //         serverPublicKey: this.publicKey
+    //     })
+    //     .then(sub => this.newsletterService.addPushSubscriber(sub).subscribe())
+    //     .catch(err => console.error('Could not subscribe to notifications', err));
+    // }
 
     join(user, room) {
         this.user = user;
@@ -74,13 +89,13 @@ export class AppComponent {
     sendMessage(message) {
         if (message.startsWith('@')) {
             const messageSplit = message.split(' ');
-            var userTo = messageSplit[0].substring(1, messageSplit[0].length);
-            var socketId = this.users.filter(x => x.user == userTo)[0].socketId;
+            const userTo = messageSplit[0].substring(1, messageSplit[0].length);
+            const socketId = this.users.filter(x => x.user === userTo)[0].socketId;
             console.log(`user: ${this.user}; userTo: ${userTo}; userToSocket: ${socketId}; message: ${message}`);
 
-            var newMessage = { user: this.user, message: message, private: true };
+            const newMessage = { user: this.user, message, private: true };
             this.messageArray.push(newMessage);
-            this.chatService.sendPrivateMessage({user: this.user, socketId: socketId, userTo: userTo, message});
+            this.chatService.sendPrivateMessage({user: this.user, socketId, userTo, message});
         } else {
             this.chatService.sendMessage({user: this.user, room: this.room, message});
         }

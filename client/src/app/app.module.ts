@@ -12,10 +12,11 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { ChatService } from './chat.service'
-import { ImageUploadService } from './image-upload.service'
-import { HttpClient } from '@angular/common/http'
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
+import { ChatService } from './chat.service';
+import { ImageUploadService } from './image-upload.service';
+import { SwPush } from '@angular/service-worker';
+import { NewsletterService } from './newsletter.service';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
