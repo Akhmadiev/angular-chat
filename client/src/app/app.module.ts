@@ -14,9 +14,10 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ChatService } from './chat.service';
 import { ImageUploadService } from './image-upload.service';
-import { SwPush } from '@angular/service-worker';
-import { NewsletterService } from './newsletter.service';
+import { ServiceWorkerModule } from '@angular/service-worker';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { environment } from '../environments/environment';
+import { PushNotificationsService } from './push-notification.service';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     MatSelectModule,
     HttpClientModule,
     SimpleNotificationsModule.forRoot(),
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    environment.production ? ServiceWorkerModule.register('/ngsw-worker.js') : []
   ],
   exports: [
     BrowserModule,
@@ -48,7 +50,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     MatIconModule,
     MatAutocompleteModule
   ],
-  providers: [ChatService, ImageUploadService],
+  providers: [ChatService, ImageUploadService, PushNotificationsService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
