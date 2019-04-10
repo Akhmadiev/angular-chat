@@ -1,0 +1,939 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sites_azdbrp_df_eus_name": {
+            "defaultValue": "azdbrp-df-eus",
+            "type": "String"
+        },
+        "vaults_azdbrp_df_eus_name": {
+            "defaultValue": "azdbrp-df-eus",
+            "type": "String"
+        },
+        "storageAccounts_azdbrpdfeus_name": {
+            "defaultValue": "azdbrpdfeus",
+            "type": "String"
+        },
+        "certificates_FlightingCertificate_name": {
+            "defaultValue": "FlightingCertificate",
+            "type": "String"
+        },
+        "databaseAccounts_azdbrp_df_eus_name": {
+            "defaultValue": "azdbrp-df-eus",
+            "type": "String"
+        },
+        "autoscalesettings_CPUUsageScaleOut_name": {
+            "defaultValue": "CPUUsageScaleOut",
+            "type": "String"
+        },
+        "serverfarms_azdbrp_AppServicePlan_df_eus_name": {
+            "defaultValue": "azdbrp-AppServicePlan-df-eus",
+            "type": "String"
+        },
+        "certificates_ApplicationForAccessingKeyVaultCertificate_name": {
+            "defaultValue": "ApplicationForAccessingKeyVaultCertificate",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2015-04-08",
+            "name": "[parameters('databaseAccounts_azdbrp_df_eus_name')]",
+            "location": "East US",
+            "kind": "GlobalDocumentDB",
+            "properties": {
+                "ipRangeFilter": "",
+                "enableAutomaticFailover": false,
+                "enableMultipleWriteLocations": false,
+                "isVirtualNetworkFilterEnabled": false,
+                "virtualNetworkRules": [],
+                "databaseAccountOfferType": "Standard",
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxIntervalInSeconds": 5,
+                    "maxStalenessPrefix": 100
+                },
+                "locations": [
+                    {
+                        "locationName": "East US",
+                        "provisioningState": "Succeeded",
+                        "failoverPriority": 0
+                    }
+                ],
+                "capabilities": []
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2016-10-01",
+            "name": "[parameters('vaults_azdbrp_df_eus_name')]",
+            "location": "eastus",
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "Standard"
+                },
+                "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+                "accessPolicies": [
+                    {
+                        "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+                        "objectId": "5d1ffddc-bb33-41e5-9118-2b1011dc1691",
+                        "permissions": {
+                            "secrets": [
+                                "list",
+                                "get"
+                            ]
+                        }
+                    }
+                ],
+                "enabledForDeployment": false
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2018-07-01",
+            "name": "[parameters('storageAccounts_azdbrpdfeus_name')]",
+            "location": "eastus",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "identity": {
+                "principalId": "1c6495fd-f2b7-4a19-a6cc-40940088c1c2",
+                "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "enabled": true
+                        },
+                        "blob": {
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Web/certificates",
+            "apiVersion": "2016-03-01",
+            "name": "[parameters('certificates_ApplicationForAccessingKeyVaultCertificate_name')]",
+            "location": "East US",
+            "properties": {
+                "hostNames": [
+                    "s2s-cred-df.brp.azd.security.ce.azure-int.net"
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Web/certificates",
+            "apiVersion": "2016-03-01",
+            "name": "[parameters('certificates_FlightingCertificate_name')]",
+            "location": "East US",
+            "properties": {
+                "hostNames": [
+                    "flighting-cred-df.brp.azd.security.ce.azure-int.net"
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2016-09-01",
+            "name": "[parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name')]",
+            "location": "East US",
+            "tags": {
+                "displayName": "azdbrp-AppServicePlan-df-eus"
+            },
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "kind": "app",
+            "properties": {
+                "name": "[parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name')]",
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "type": "microsoft.insights/autoscalesettings",
+            "apiVersion": "2014-04-01",
+            "name": "[parameters('autoscalesettings_CPUUsageScaleOut_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]"
+            ],
+            "properties": {
+                "profiles": [
+                    {
+                        "name": "Auto created scale condition",
+                        "capacity": {
+                            "minimum": "1",
+                            "maximum": "3",
+                            "default": "1"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "CpuPercentage",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": 70,
+                                    "dimensions": null
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT5M"
+                                }
+                            },
+                            {
+                                "metricTrigger": {
+                                    "metricName": "CpuPercentage",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "LessThanOrEqual",
+                                    "threshold": 35,
+                                    "dimensions": null
+                                },
+                                "scaleAction": {
+                                    "direction": "Decrease",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT5M"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "enabled": true,
+                "name": "[parameters('autoscalesettings_CPUUsageScaleOut_name')]",
+                "targetResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-08-01",
+            "name": "[parameters('sites_azdbrp_df_eus_name')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]"
+            ],
+            "tags": {
+                "displayName": "azdbrp-df-eus",
+                "hidden-related:/subscriptions/383ab422-47be-42d4-9003-45ea721a6e27/resourceGroups/azdbrp-df-eus-rg/providers/Microsoft.Web/serverfarms/azdbrp-AppServicePlan-df-eus": "Resource"
+            },
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]",
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": true,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/web')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "tags": {
+                "displayName": "azdbrp-df-eus",
+                "hidden-related:/subscriptions/383ab422-47be-42d4-9003-45ea721a6e27/resourceGroups/azdbrp-df-eus-rg/providers/Microsoft.Web/serverfarms/azdbrp-AppServicePlan-df-eus": "Resource"
+            },
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "phpVersion": "5.6",
+                "pythonVersion": "",
+                "nodeVersion": "",
+                "linuxFxVersion": "",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$azdbrp-df-eus",
+                "scmType": "None",
+                "use32BitWorkerProcess": false,
+                "webSocketsEnabled": false,
+                "alwaysOn": true,
+                "appCommandLine": "",
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": true,
+                        "virtualDirectories": null
+                    }
+                ],
+                "winAuthAdminState": 0,
+                "winAuthTenantState": 0,
+                "customAppPoolIdentityAdminState": false,
+                "customAppPoolIdentityTenantState": false,
+                "loadBalancing": "LeastRequests",
+                "routingRules": [],
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetName": "",
+                "siteAuthEnabled": false,
+                "siteAuthSettings": {
+                    "enabled": null,
+                    "unauthenticatedClientAction": null,
+                    "tokenStoreEnabled": null,
+                    "allowedExternalRedirectUrls": null,
+                    "defaultProvider": null,
+                    "clientId": null,
+                    "clientSecret": null,
+                    "clientSecretCertificateThumbprint": null,
+                    "issuer": null,
+                    "allowedAudiences": null,
+                    "additionalLoginParams": null,
+                    "isAadAutoProvisioned": false,
+                    "googleClientId": null,
+                    "googleClientSecret": null,
+                    "googleOAuthScopes": null,
+                    "facebookAppId": null,
+                    "facebookAppSecret": null,
+                    "facebookOAuthScopes": null,
+                    "twitterConsumerKey": null,
+                    "twitterConsumerSecret": null,
+                    "microsoftAccountClientId": null,
+                    "microsoftAccountClientSecret": null,
+                    "microsoftAccountOAuthScopes": null
+                },
+                "localMySqlEnabled": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "ftpsState": "AllAllowed",
+                "reservedInstanceCount": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/4870451551468233646')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "4870451551468233646",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"1b25c977-8f12-4465-81d8-195d95b035fa\",\"releaseId\":\"487045\",\"buildNumber\":\"1.1.2.142 (1b25c977-8f12-4465-81d8-195d95b035fa)\",\"releaseName\":\"Release-65\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-01T19:24:20.6968251Z",
+                "end_time": "2019-03-01T19:24:20.6968251Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/4924131551726513533')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "4924131551726513533",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"758ad16e-c97d-4373-9f17-fce2f169bc86\",\"releaseId\":\"492413\",\"buildNumber\":\"1.1.2.143 (758ad16e-c97d-4373-9f17-fce2f169bc86)\",\"releaseName\":\"Release-66\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-04T19:09:07.3373228Z",
+                "end_time": "2019-03-04T19:09:07.3373228Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5018601551994780432')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5018601551994780432",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"7b355fa7-8ad9-4411-9e0d-d77b79526774\",\"releaseId\":\"501860\",\"buildNumber\":\"1.1.2.147 (7b355fa7-8ad9-4411-9e0d-d77b79526774)\",\"releaseName\":\"Release-67\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-07T21:40:07.9692506Z",
+                "end_time": "2019-03-07T21:40:07.9692506Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5046181552076199420')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5046181552076199420",
+                "status": 4,
+                "author_email": "",
+                "author": "Olayinka Soyinka",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"2766fafc-b874-41dc-8f6c-3bcd60fdf80c\",\"releaseId\":\"504618\",\"buildNumber\":\"1.1.2.149 (2766fafc-b874-41dc-8f6c-3bcd60fdf80c)\",\"releaseName\":\"Release-68\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-08T20:17:12.4696136Z",
+                "end_time": "2019-03-08T20:17:12.4696136Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5047541552081005818')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5047541552081005818",
+                "status": 4,
+                "author_email": "",
+                "author": "Olayinka Soyinka",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"2766fafc-b874-41dc-8f6c-3bcd60fdf80c\",\"releaseId\":\"504754\",\"buildNumber\":\"1.1.2.149 (2766fafc-b874-41dc-8f6c-3bcd60fdf80c)\",\"releaseName\":\"Release-69\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-08T21:37:10.9783098Z",
+                "end_time": "2019-03-08T21:37:10.9783098Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5113051552351126222')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5113051552351126222",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"93807367-1a45-4f15-8998-5b0cd24a3c43\",\"releaseId\":\"511305\",\"buildNumber\":\"1.1.2.151 (93807367-1a45-4f15-8998-5b0cd24a3c43)\",\"releaseName\":\"Release-70\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-12T00:39:02.4020227Z",
+                "end_time": "2019-03-12T00:39:02.4020227Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5243981552701484852')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5243981552701484852",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"50ee1c08-30dc-4162-b25f-6919917f7a74\",\"releaseId\":\"524398\",\"buildNumber\":\"1.1.2.156 (50ee1c08-30dc-4162-b25f-6919917f7a74)\",\"releaseName\":\"Release-71\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-16T01:58:33.801286Z",
+                "end_time": "2019-03-16T01:58:33.801286Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5306111552942886470')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5306111552942886470",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"50ee1c08-30dc-4162-b25f-6919917f7a74\",\"releaseId\":\"530611\",\"buildNumber\":\"1.1.2.156 (50ee1c08-30dc-4162-b25f-6919917f7a74)\",\"releaseName\":\"Release-72\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-18T21:01:54.8979524Z",
+                "end_time": "2019-03-18T21:01:54.8979524Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5619721553824147094')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5619721553824147094",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"7c5ed1f4-8d6b-45c2-a844-a676a2bcfc5f\",\"releaseId\":\"561972\",\"buildNumber\":\"1.1.2.171\",\"releaseName\":\"Release-73\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-29T01:49:29.7535238Z",
+                "end_time": "2019-03-29T01:49:29.7535238Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/5652901553911774361')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5652901553911774361",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"162d2f19-99ed-4888-8f5b-ed1193f6e941\",\"releaseId\":\"565290\",\"buildNumber\":\"1.1.2.174\",\"releaseName\":\"Release-74\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-30T02:10:03.629338Z",
+                "end_time": "2019-03-30T02:10:03.629338Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/', parameters('sites_azdbrp_df_eus_name'), '.azurewebsites.net')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "siteName": "azdbrp-df-eus",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]",
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]"
+            ],
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "azdbrp-df-eus-staging.azurewebsites.net",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "azdbrp-df-eus-staging.scm.azurewebsites.net",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_azdbrp_AppServicePlan_df_eus_name'))]",
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": true,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/config",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/web')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "phpVersion": "5.6",
+                "pythonVersion": "",
+                "nodeVersion": "",
+                "linuxFxVersion": "",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$azdbrp-df-eus__Staging",
+                "scmType": "None",
+                "use32BitWorkerProcess": false,
+                "webSocketsEnabled": false,
+                "alwaysOn": true,
+                "appCommandLine": "",
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": true,
+                        "virtualDirectories": null
+                    }
+                ],
+                "winAuthAdminState": 0,
+                "winAuthTenantState": 0,
+                "customAppPoolIdentityAdminState": false,
+                "customAppPoolIdentityTenantState": false,
+                "loadBalancing": "LeastRequests",
+                "routingRules": [],
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetName": "",
+                "siteAuthEnabled": false,
+                "siteAuthSettings": {
+                    "enabled": null,
+                    "unauthenticatedClientAction": null,
+                    "tokenStoreEnabled": null,
+                    "allowedExternalRedirectUrls": null,
+                    "defaultProvider": null,
+                    "clientId": null,
+                    "clientSecret": null,
+                    "clientSecretCertificateThumbprint": null,
+                    "issuer": null,
+                    "allowedAudiences": null,
+                    "additionalLoginParams": null,
+                    "isAadAutoProvisioned": false,
+                    "googleClientId": null,
+                    "googleClientSecret": null,
+                    "googleOAuthScopes": null,
+                    "facebookAppId": null,
+                    "facebookAppSecret": null,
+                    "facebookOAuthScopes": null,
+                    "twitterConsumerKey": null,
+                    "twitterConsumerSecret": null,
+                    "microsoftAccountClientId": null,
+                    "microsoftAccountClientSecret": null,
+                    "microsoftAccountOAuthScopes": null
+                },
+                "localMySqlEnabled": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "ftpsState": "AllAllowed",
+                "reservedInstanceCount": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/4870451551468233646')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "4870451551468233646",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"1b25c977-8f12-4465-81d8-195d95b035fa\",\"releaseId\":\"487045\",\"buildNumber\":\"1.1.2.142 (1b25c977-8f12-4465-81d8-195d95b035fa)\",\"releaseName\":\"Release-65\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-01T19:24:23.2222827Z",
+                "end_time": "2019-03-01T19:24:23.2222827Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/4924131551726513533')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "4924131551726513533",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"758ad16e-c97d-4373-9f17-fce2f169bc86\",\"releaseId\":\"492413\",\"buildNumber\":\"1.1.2.143 (758ad16e-c97d-4373-9f17-fce2f169bc86)\",\"releaseName\":\"Release-66\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-04T19:09:02.6706489Z",
+                "end_time": "2019-03-04T19:09:02.6706489Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5018601551994780432')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5018601551994780432",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"7b355fa7-8ad9-4411-9e0d-d77b79526774\",\"releaseId\":\"501860\",\"buildNumber\":\"1.1.2.147 (7b355fa7-8ad9-4411-9e0d-d77b79526774)\",\"releaseName\":\"Release-67\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-07T21:40:10.8003549Z",
+                "end_time": "2019-03-07T21:40:10.8003549Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5046181552076199420')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5046181552076199420",
+                "status": 4,
+                "author_email": "",
+                "author": "Olayinka Soyinka",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"2766fafc-b874-41dc-8f6c-3bcd60fdf80c\",\"releaseId\":\"504618\",\"buildNumber\":\"1.1.2.149 (2766fafc-b874-41dc-8f6c-3bcd60fdf80c)\",\"releaseName\":\"Release-68\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-08T20:17:07.1589235Z",
+                "end_time": "2019-03-08T20:17:07.1589235Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5047541552081005818')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5047541552081005818",
+                "status": 4,
+                "author_email": "",
+                "author": "Olayinka Soyinka",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"2766fafc-b874-41dc-8f6c-3bcd60fdf80c\",\"releaseId\":\"504754\",\"buildNumber\":\"1.1.2.149 (2766fafc-b874-41dc-8f6c-3bcd60fdf80c)\",\"releaseName\":\"Release-69\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-08T21:37:13.9353482Z",
+                "end_time": "2019-03-08T21:37:13.9353482Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5113051552351126222')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5113051552351126222",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"93807367-1a45-4f15-8998-5b0cd24a3c43\",\"releaseId\":\"511305\",\"buildNumber\":\"1.1.2.151 (93807367-1a45-4f15-8998-5b0cd24a3c43)\",\"releaseName\":\"Release-70\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-12T00:38:48.8836396Z",
+                "end_time": "2019-03-12T00:38:48.8836396Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5243981552701484852')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5243981552701484852",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"50ee1c08-30dc-4162-b25f-6919917f7a74\",\"releaseId\":\"524398\",\"buildNumber\":\"1.1.2.156 (50ee1c08-30dc-4162-b25f-6919917f7a74)\",\"releaseName\":\"Release-71\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-16T01:58:37.1139201Z",
+                "end_time": "2019-03-16T01:58:37.1139201Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5306111552942886470')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5306111552942886470",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"50ee1c08-30dc-4162-b25f-6919917f7a74\",\"releaseId\":\"530611\",\"buildNumber\":\"1.1.2.156 (50ee1c08-30dc-4162-b25f-6919917f7a74)\",\"releaseName\":\"Release-72\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-18T21:01:51.9314927Z",
+                "end_time": "2019-03-18T21:01:51.9314927Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5619721553824147094')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5619721553824147094",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"7c5ed1f4-8d6b-45c2-a844-a676a2bcfc5f\",\"releaseId\":\"561972\",\"buildNumber\":\"1.1.2.171\",\"releaseName\":\"Release-73\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-29T01:49:33.0782776Z",
+                "end_time": "2019-03-29T01:49:33.0782776Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/deployments",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/5652901553911774361')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "id": "5652901553911774361",
+                "status": 4,
+                "author_email": "",
+                "author": "Victoria Wu",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"SlotSwap\",\"buildId\":\"162d2f19-99ed-4888-8f5b-ed1193f6e941\",\"releaseId\":\"565290\",\"buildNumber\":\"1.1.2.174\",\"releaseName\":\"Release-74\",\"collectionUrl\":\"https://msazure.visualstudio.com/\",\"teamProject\":\"b32aa71e-8ed2-41b2-9d77-5bc261222004\",\"sourceSlot\":\"Staging\",\"targetSlot\":\"production\"}",
+                "start_time": "2019-03-30T02:10:01.0404315Z",
+                "end_time": "2019-03-30T02:10:01.0404315Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/hostNameBindings",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_azdbrp_df_eus_name'), '/Staging/', parameters('sites_azdbrp_df_eus_name'), '-staging.azurewebsites.net')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('sites_azdbrp_df_eus_name'), 'Staging')]",
+                "[resourceId('Microsoft.Web/sites', parameters('sites_azdbrp_df_eus_name'))]"
+            ],
+            "properties": {
+                "siteName": "azdbrp-df-eus(Staging)",
+                "hostNameType": "Verified"
+            }
+        }
+    ]
+}
