@@ -4,6 +4,10 @@ import { ImageUploadService } from './image-upload.service';
 import { NotificationsService } from 'angular2-notifications';
 import { FormControl } from '@angular/forms';
 import { PushNotificationsService } from './push-notification.service';
+import { HttpClient } from '@angular/common/http';
+import { DomSanitizer } from '@angular/platform-browser';
+
+const URL = 'http://localhost:3000/uploads/';
 
 @Component({
   selector: 'app-root',
@@ -12,8 +16,9 @@ import { PushNotificationsService } from './push-notification.service';
 })
 export class AppComponent {
     user: string;
-
+    uploadedFile: File;
     room: string;
+    htmlUrl: string;
 
     messageArray: Array<{ user: string, private: boolean, message: string }> = [];
 
@@ -27,11 +32,14 @@ export class AppComponent {
         'Room3'
     ];
 
+    readonly rootURL = 'http://localhost:3000';
+
     constructor(
         private chatService: ChatService,
-        private imageService: ImageUploadService,
         private notifier: NotificationsService,
-        private notificationService: PushNotificationsService) {
+        private notificationService: PushNotificationsService,
+        private http: HttpClient,
+        private sanitizer: DomSanitizer) {
 
         this.chatService.newUserJoined()
             .subscribe(x => {
@@ -87,43 +95,38 @@ export class AppComponent {
         this.notificationService.generateNotification(data);
     }
 
-    // processFile(imageInput: any) {
-    //     const file: File = imageInput.files[0];
-    //     const reader = new FileReader();
+     fileChange(element){
+        this.uploadedFile = element.target.files[0];
+      }
+    
+      uploadImage(){
+        let formData = new FormData();
+        formData.append("file", this.uploadedFile, this.uploadedFile.name);
 
-    //     reader.addEventListener('load', (event: any) => {
+        this.http.post(this.rootURL + '/upload', formData, {responseType: 'text'})
+        .subscribe(
+            res => {
+                this.chatService.sendMessage({user: this.user, isFile: true, room: this.room, message: this.uploadedFile.name});
+                console.log(res);
+            },
+            err => {
+              console.log(err);
+            }
+          )
+      }
 
-    //       this.selectedFile = new ImageSnippet(event.target.result, file);
+      download(fileName){
+        let formData = new FormData();
+        formData.append("file", fileName);
 
-    //       this._imageService.uploadImage(this.selectedFile.file).subscribe(
-    //         (res) => {
-
-    //         },
-    //         (err) => {
-
-    //         })
-    //     });
-
-    //     reader.readAsDataURL(file);
-    // }
-
-    // uploadImage() {
-    //     if (this.selectedFile) {
-    //       const reader = new FileReader();
-
-    //       reader.addEventListener('load', (event: any) => {
-    //         this.selectedFile.src = event.target.result;
-
-    //         this._imageService.uploadImage(this.selectedFile.file).subscribe(
-    //             (res) => {
-
-    //             },
-    //             (err) => {
-
-    //             })
-    //       });
-
-    //     reader.readAsDataURL(this.selectedFile.file);
-    //     }
-    // }
+        this.http.post(this.rootURL + '/download', formData, {responseType: "blob"})
+        .subscribe(
+            res => {
+                window.open(window.URL.createObjectURL(res));
+            },
+            err => {
+              console.log(err);
+            }
+          )  
+      }
 }

@@ -7,8 +7,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { SimpleNotificationsModule } from 'angular2-notifications';
 import { HttpClientModule } from '@angular/common/http';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {CommonModule} from '@angular/common';
+import {MatButtonModule} from '@angular/material/button';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -19,9 +21,12 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { environment } from '../environments/environment';
 import { PushNotificationsService } from './push-notification.service';
 
+import { FileSelectDirective } from 'ng2-file-upload';
+
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    FileSelectDirective 
   ],
   imports: [
     BrowserModule,
@@ -37,7 +42,9 @@ import { PushNotificationsService } from './push-notification.service';
     HttpClientModule,
     SimpleNotificationsModule.forRoot(),
     MatAutocompleteModule,
-    environment.production ? ServiceWorkerModule.register('/ngsw-worker.js') : []
+    MatButtonModule,
+    environment.production ? ServiceWorkerModule.register('/ngsw-worker.js') : [],
+    CommonModule
   ],
   exports: [
     BrowserModule,

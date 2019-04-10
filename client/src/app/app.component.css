@@ -42,3 +42,19 @@
   .example-full-width {
     width: 100%;
   }
+ 
+
+  .download-link {
+    display: block;
+    float: left;
+    width: auto;
+    margin: 0 20px 0 0;
+    font-size: 12px;
+    text-align: center;
+    text-shadow: 0px -1px 0px #0172bd;
+    border-radius: 5px; 
+    box-shadow: inset 0px 1px 0px rgba(255,255,255,.2), 0px 1px 0px #fff, 0px -1px 0px rgba(0,0,0,.1); 	
+    height: 30px;
+    color: transparent;
+    line-height: 30px;	
+  }
