@@ -38,10 +38,11 @@ app.post('/upload', function(req, res) {
   });
 });
 
-app.post('/download', function(incomingData, res) {
+app.get('/download', function(incomingData, res) {
   console.log("download");
+  var fileName = incomingData.query.fileName;
 
-  var filePath = __dirname + '/uploads/' + incomingData.body.file;
+  var filePath = __dirname + '/uploads/' + fileName;
   res.sendFile(filePath);
 });
 

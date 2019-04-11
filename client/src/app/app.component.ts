@@ -115,18 +115,7 @@ export class AppComponent {
           )
       }
 
-      download(fileName){
-        let formData = new FormData();
-        formData.append("file", fileName);
-
-        this.http.post(this.rootURL + '/download', formData, {responseType: "blob"})
-        .subscribe(
-            res => {
-                window.open(window.URL.createObjectURL(res));
-            },
-            err => {
-              console.log(err);
-            }
-          )  
+      download(fileName) {
+        window.open(this.rootURL + '/download?fileName=' + fileName);
       }
 }
