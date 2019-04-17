@@ -1,13 +1,9 @@
 import { Component } from '@angular/core';
 import { ChatService } from './chat.service';
-import { ImageUploadService } from './image-upload.service';
 import { NotificationsService } from 'angular2-notifications';
 import { FormControl } from '@angular/forms';
 import { PushNotificationsService } from './push-notification.service';
 import { HttpClient } from '@angular/common/http';
-import { DomSanitizer } from '@angular/platform-browser';
-
-const URL = 'http://localhost:3000/uploads/';
 
 @Component({
   selector: 'app-root',
@@ -38,8 +34,7 @@ export class AppComponent {
         private chatService: ChatService,
         private notifier: NotificationsService,
         private notificationService: PushNotificationsService,
-        private http: HttpClient,
-        private sanitizer: DomSanitizer) {
+        private http: HttpClient) {
 
         this.chatService.newUserJoined()
             .subscribe(x => {
@@ -85,23 +80,23 @@ export class AppComponent {
     }
 
     notify(user, message) {
-        var data: Array <any> = [];
+        const data: Array <any> = [];
 
         data.push({
             title: user,
             alertContent: message
         });
-        
+
         this.notificationService.generateNotification(data);
     }
 
-     fileChange(element){
+     fileChange(element) {
         this.uploadedFile = element.target.files[0];
       }
-    
-      uploadImage(){
-        let formData = new FormData();
-        formData.append("file", this.uploadedFile, this.uploadedFile.name);
+
+      uploadImage() {
+        const formData = new FormData();
+        formData.append('file', this.uploadedFile, this.uploadedFile.name);
 
         this.http.post(this.rootURL + '/upload', formData, {responseType: 'text'})
         .subscribe(
@@ -112,7 +107,7 @@ export class AppComponent {
             err => {
               console.log(err);
             }
-          )
+          );
       }
 
       download(fileName) {

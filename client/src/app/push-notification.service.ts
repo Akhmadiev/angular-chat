@@ -1,5 +1,5 @@
-import {     Injectable  } from '@angular/core';
-import {      Observable  } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 @Injectable()
 export class PushNotificationsService {
     public permission: Permission;
@@ -12,14 +12,14 @@ export class PushNotificationsService {
     requestPermission(): void {
         const self = this;
         if ('Notification' in window) {
-            Notification.requestPermission(function(status) {
+            Notification.requestPermission((status) => {
                 return self.permission = status;
             });
         }
     }
     create(title: string, options ?: PushNotification): any {
         const self = this;
-        return new Observable(function(obs) {
+        return new Observable((obs) => {
             if (!('Notification' in window)) {
                 console.log('Notifications are not available in this environment');
                 obs.complete();
@@ -28,26 +28,26 @@ export class PushNotificationsService {
                 console.log('The user hasn\'t granted you permission to send push notifications');
                 obs.complete();
             }
-            const _notify = new Notification(title, options);
-            _notify.onshow = function(e) {
+            const notify = new Notification(title, options);
+            notify.onshow = (e) => {
                 return obs.next({
-                    notification: _notify,
+                    notification: notify,
                     event: e
                 });
             };
-            _notify.onclick = function(e) {
+            notify.onclick = (e) => {
                 return obs.next({
-                    notification: _notify,
+                    notification: notify,
                     event: e
                 });
             };
-            _notify.onerror = function(e) {
+            notify.onerror = (e) => {
                 return obs.error({
-                    notification: _notify,
+                    notification: notify,
                     event: e
                 });
             };
-            _notify.onclose = function() {
+            notify.onclose = () => {
                 return obs.complete();
             };
         });
@@ -59,7 +59,7 @@ export class PushNotificationsService {
                 body: item.alertContent,
                 icon: 'assets/bell-icon.png'
             };
-            const notify = self.create(item.title, options).subscribe();
+            self.create(item.title, options).subscribe();
         });
     }
 }

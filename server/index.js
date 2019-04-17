@@ -1,10 +1,7 @@
 let express = require('express')
 let app = express();
-var cors = require('cors');
-const fileUpload = require('express-fileupload');
-var fs = require('fs');
-var path = require('path');
-
+let cors = require('cors');
+let fileUpload = require('express-fileupload');
 let http = require('http');
 let server = http.Server(app);
 let socketIO = require('socket.io');
@@ -13,7 +10,6 @@ let users = [];
 
 const port = process.env.PORT || 3000;
 
-// default options
 app.use(fileUpload());
 app.use(cors());
 
@@ -38,7 +34,7 @@ app.post('/upload', function(req, res) {
   });
 });
 
-app.get('/download', function(incomingData, res) {
+app.get('/download', (incomingData, res) => {
   console.log("download");
   var fileName = incomingData.query.fileName;
 
@@ -53,11 +49,9 @@ io.on('connection', (socket) => {
 
       users.push({ user: data.user, socketId: socket.id });
       io.in(data.room).emit('new user joined', { user: data.user, users: users, message:'has joined this room.' });
-
-      // socket.broadcast.to(data.room).emit('new user joined', { user: data.user, users: users, message:'has joined this room.' });
     });
 
-    socket.on('leave', function(data){
+    socket.on('leave', (data) => {
     
       console.log(data.user + 'left the room : ' + data.room);
 
@@ -66,7 +60,7 @@ io.on('connection', (socket) => {
       socket.leave(data.room);
     });
 
-    socket.on('message',function(data){
+    socket.on('message', (data) => {
       console.log(`${data.user} sent a message in the room: ${data.room}: ${data.message}`);
       io.in(data.room).emit('new message', {user: data.user, isFile: data.isFile, message: data.message});
     });
